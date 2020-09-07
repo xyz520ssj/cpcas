@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="x-admin-sm">
+
+<head>
+    <meta charset="UTF-8">
+    <title>留言列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script src="__ADMIN__/lib/layui/layui.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="__ADMIN__/css/font.css">
+    <link rel="stylesheet" href="__ADMIN__/css/xadmin.css">
+    <script type="text/javascript" src="__ADMIN__/js/xadmin.js"></script>
+</head>
+<body>
+<table id="test" lay-filter="test" lay-data="{id: 'test'}"></table>
+
+<!--//头部工具栏-->
+<script type="text/html" id="toolbarDemo">
+    <div>
+        <div class="demoTable">
+            <div class="layui-form">
+                搜索类型
+                <div class="layui-input-inline">
+                    <select id="check" name="check" class="layui-select" lay-verify="required"
+                            lay-filter="selectTemplate" lay-search width="80px">
+                        <option value=""></option>
+                        <option value="1">ID</option>
+                        <option value="2">内容</option>
+                        <option value="3">时间搜索</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline layui-show-xs-block">
+                    <input class="layui-input" placeholder="开始时间" name="start" id="start"></div>
+                <div class="layui-input-inline layui-show-xs-block">
+                    <input class="layui-input" placeholder="截止时间" name="end" id="end"></div>
+                搜索内容：
+                <div class="layui-inline">
+                    <input class="layui-input" name="value" id="inputval" autocomplete="off" required>
+                </div>
+                <button type="button" class="layui-btn" data-type="reload">搜索</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="refresh">刷新表格</button>
+        <button class="layui-btn layui-btn-sm layui-btn-danger" lay-event="dels">删除选中行</button>
+    </div>
+</script>
+
+<!--//操作栏-->
+<script type="text/html" id="barDemo">
+    <a style=" text-decoration: none"><i class="layui-icon layui-icon-delete" lay-event="del" title="删除"></i> </a>
+</script>
+
+</body>
+<script>
+
+    //初始化日期控件 以及日期选择限制问题
+    layui.use('laydate', function () {
+        var laydate = layui.laydate;
+        var endDate = laydate.render({
+            elem: '#end',//选择器结束时间
+            type: 'datetime',
+            min: "1970-1-1",//设置min默认最小值
+            done: function (value, date) {
+                startDate.config.max = {
+                    year: date.year,
+                    month: date.month - 1,//关键
+                    date: date.date,
+                    hours: 0,
+                    minutes: 0,
+                    seconds: 0
+                }
+            }
+        });
+        //日期范围
+        var startDate = laydate.render({
+            elem: '#start',
+            type: 'datetime',
+            max: "2099-12-31",//设置一个默认最大值
+            done: function (value, date) {
+                endDate.config.min = {
+                    year: date.year,
+                    month: date.month - 1, //关键
+                    date: date.date,
+                    hours: 0,
+                    minutes: 0,
+                    seconds: 0
+                };
+            }
+        });
+
+    });
+
+    layui.use('table', function () {
+        var table = layui.table;
+        table.render({
+            even: false //开启隔行背景
+            , size: 'sm' //小尺寸的表格
+            , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+            , minheight: "800px"
+            , elem: '#test'
+            , page: true
+            , id: 'searchreload'
+            , limit: 15
+            , height: 650
+            , url: "{:url('Admin/messagejson')}"
+            , parseData: function (res) { //res 即为原始返回的数据
+                return {
+                    "code": 0, //解析接口状态
+                    "msg": "刷新页面试试", //解析提示文本
+                    "count": res.total, //解析数据长度
+                    "data": res.data//解析数据列表
+                };
+            },
+            cols: [[
+                {field: 'id', type: 'checkbox', width: 50, fixed: 'left'}
+                , {field: 'id', title: '留言编号', width: 150, sort: true}
+                , {field: 'content', title: '留言内容', width: 800}
+                , {field: 'time', title: '留言时间', width: 150}
+                , {fixed: 'right', title: '操作', toolbar: '#barDemo', width: 120}
+            ]],
+
+        });
+
+        //查询表格重载  两种的查询方式
+        $('.demoTable .layui-btn').on('click', function () {
+            console.log(document.getElementById("check").value);
+            table.reload('searchreload', {
+                where: { //设定异步数据接口的额外参数，任意设
+                    type: document.getElementById("check").value,
+                    value: $("#inputval").val(),
+                    start: $("#start").val(),
+                    end: $("#end").val()
+                },
+                page: {
+                    curr: 1
+                }
+            });
+        });
+
+
+        //监听头部工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                //新增
+                case 'addData':
+                    layer.open({
+                        type: 2,
+                        title: '教师添加',
+                        shadeClose: true,
+                        shade: false,
+                        //btn: ['确定', '取消'],
+                        maxmin: true, //开启最大化最小化按钮
+                        area: ['1100px', '540px'],
+                        content: ['expertadd'],
+                        end: function () {
+                            table.reload('searchreload');
+                        }
+                    });
+                    break;
+
+
+                //批量删除
+                case 'dels':
+                    var data = checkStatus.data;
+                    var ids = [];
+                    data.forEach(function (item) {
+                        ids.push(item.id);
+                    });
+                    // console.log(ids);
+                    if (data.length == '') {
+                        layer.msg("未选择数据");
+                    } else {
+                        layer.confirm('真的删除选中数据吗', function (index) {
+                            layer.close(index);
+                            $.ajax({
+                                type: "post",
+                                url: "{:url('Admin/expertdels')}",
+                                dataType: "json",
+                                data: {"ids": ids},
+                                async: false,
+                                success: function (data) {
+                                    layer.msg("删除成功");
+                                    table.reload('searchreload');
+                                }
+                            });
+                            layer.msg("删除成功");
+                            table.reload('searchreload');
+                        })
+                    }
+                    break;
+                case 'refresh':
+                    location.reload();
+                    //able.reload('searchreload');  正确 搜索存在问题 导致无法刷新
+                    break;
+            }
+            ;
+        });
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('真的删除行么', function (index) {
+                    layer.close(index);
+                    $.ajax({
+                        type: "post",
+                        url: "{:url('Admin/expertdel')}",
+                        dataType: "json",
+                        data: {"id": data.id},
+                        async: false,
+                        success: function (data) {
+                            layer.msg("删除成功");
+                            table.reload('searchreload');
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                var id = data.id;
+                layui.use('layer', function () {
+                    var layer = layui.layer;
+                    layer.open({
+                        type: 1,
+                        title: "教师修改",
+                        shade: false,
+                        area: ['1100px', '550px'],
+                        content: $('#edit_form').html(),
+                        success: function (layero, index) {
+                            uneditid = id;
+
+                            $.ajax({
+                                type: "post",
+                                url: "{:url('Admin/geteditexpert')}",
+                                dataType: "json",
+                                data: {"id": data.id},
+                                async: false,
+                                success: function (data) {
+
+                                    table.reload('searchreload');
+                                    $(" input[name='id']").val(data.list3.id);
+                                    $(" input[name='name']").val(data.list3.name);
+                                    $(" input[name='pwd']").val(data.list3.pwd);
+
+                                    var selecctsexval;
+                                    var selecctlevelval;
+                                    var selectsex = document.getElementById("sex");
+                                    var selectlevel = document.getElementById("level");
+                                    for (var i = 0; i < selectsex.options.length; i++) {
+                                        if (selectsex.options[i].value == data.list3.sex) {
+                                            selecctsexval = selectsex.options[i].value;
+                                            selectsex.options[i].selected = true;
+                                            $("input[name='sex']").val(selectsex.options[i].value);
+                                        }
+                                    }
+                                    for (var i = 0; i < selectlevel.options.length; i++) {
+                                        if (selectlevel.options[i].value == data.list3.level) {
+                                            selecctlevelval = selectlevel.options[i].value;
+                                            selectlevel.options[i].selected = true;
+                                            $("input[name='level']").val(selectlevel.options[i].value);
+                                        }
+                                    }
+                                    //下拉框必须先赋值在 选中 再渲染
+                                    $(layero).find('select[name=sex]').val(selecctsexval);
+                                    $(layero).find('select[name=level]').val(selecctlevelval);
+                                    $(" input[name='email']").val(data.list3.mail);
+                                    $(" input[name='age']").val(data.list3.age);
+                                    $(" input[name='address']").val(data.list3.address);
+                                    $(" input[name='phone']").val(data.list3.phone);
+                                    $(" textarea[name='person']").val(data.list3.person);
+                                }
+                            });
+                            layui.form.render('select');
+                        }
+                    });
+                })
+            }
+        })
+    });
+</script>
+
+</html>

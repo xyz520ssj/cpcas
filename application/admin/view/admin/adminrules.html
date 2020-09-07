@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="x-admin-sm">
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.2</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script src="__ADMIN__/lib/layui/layui.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="__ADMIN__/css/font.css">
+    <link rel="stylesheet" href="__ADMIN__/css/xadmin.css">
+    <script type="text/javascript" src="__ADMIN__/js/xadmin.js"></script>
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<table id="test" lay-filter="test" lay-data="{id: 'test'}"></table>
+<!--//头部工具栏-->
+<script type="text/html" id="toolbarDemo">
+    <div>
+        <div class="demoTable">
+            <div class="layui-form">
+                搜索类型
+                <div class="layui-input-inline">
+                    <select id="check" name="check" class="layui-select" lay-verify="required"
+                            lay-filter="selectTemplate" lay-search width="80px">
+                        <option value=""></option>
+                        <option value="1">控制器/方法</option>
+                        <option value="2">权限名称</option>
+                    </select>
+                </div>
+                搜索内容：
+                <div class="layui-inline">
+                    <input class="layui-input" name="value" id="inputval" autocomplete="off" required>
+                </div>
+                <button type="button" class="layui-btn" data-type="reload">搜索</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-btn-container">
+        <button type="button" class="layui-btn layui-btn-sm" lay-event="addData">新增 <span
+                class="glyphicon glyphicon-plus"></span></button>
+        <button class="layui-btn layui-btn-sm" lay-event="refresh">刷新表格</button>
+        <button class="layui-btn layui-btn-sm layui-btn-danger" lay-event="dels">删除选中行</button>
+    </div>
+
+</script>
+<!--//操作栏-->
+<script type="text/html" id="barDemo">
+    <a style=" text-decoration: none"><i class="layui-icon layui-icon-edit toolbars" lay-event="edit"
+                                         title="编辑"></i></a>
+    <a style=" text-decoration: none"><i class="layui-icon layui-icon-delete" lay-event="del" title="删除"></i> </a>
+</script>
+
+<div id="edit_form" style="display:none">
+    <div class="layui-form">
+        <div class="text" style="width: 1000px;height: 100%;margin: auto;padding-top: 20px;">
+            <div class="layui-form-item" style="width: 45%;float: left;clear: none;margin-bottom: 30px;">
+                <label class="layui-form-label">
+                    <span class="x-red">*</span>权限ID</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="id" name="id" required lay-verify="required|number|idcheck"
+                           autocomplete="off"
+                           class="layui-input"></div>
+                <div class="layui-form-mid layui-word-aux">
+                </div>
+            </div>
+
+            <div class="layui-form-item" style="width: 45%;float: left;clear: none;margin-bottom: 30px;">
+                <label class="layui-form-label">
+                    <span class="x-red">*</span>上级权限</label>
+                <div class="layui-input-inline">
+                    <select id="pid" name="pid" lay-verify="required" autocomplete="off" class="layui-input">
+                        <option value=""></option>
+                        {volist name="statuslist" id="vo"}
+                        <option value="{$vo.status}">{$vo.status}</option>
+                        {/volist}
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="layui-form-item" style="width: 45%;float: left;clear: none;margin-bottom: 30px;">
+                <label class="layui-form-label">
+                    <span class="x-red">*</span>用户组名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="title" name="title" required lay-verify="required"
+                           autocomplete="off"
+                           class="layui-input"></div>
+            </div>
+
+            <div class="layui-form-item" style="width: 45%;float: left;clear: none;margin-bottom: 30px;">
+                <label class="layui-form-label">
+                    <span class="x-red">*</span>规则</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="rules" name="rules" required lay-verify="required" autocomplete="off"
+                           class="layui-input"></div>
+            </div>
+
+
+            <div class="layui-form-item" style="width: 45%;float: left;clear: none;margin-bottom: 30px;">
+                <label class="layui-form-label">
+                    <span class="x-red">*</span>状态</label>
+                <div class="layui-input-inline">
+                    <select id="status" name="status" lay-verify="required" autocomplete="off" class="layui-input">
+                        <option value=""></option>
+                        {volist name="statuslist" id="vo"}
+                        <option value="{$vo.status}">{$vo.status}</option>
+                        {/volist}
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="layui-form-item" style="width: 45%;float: left;clear: none;margin-bottom: 30px;">
+                <label class="layui-form-label"></label>
+                <button class="layui-btn" lay-filter="update" lay-submit="update">修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+
+
+    var editid;
+    var uneditid;
+    layui.use(['form', 'layer', 'jquery', 'table'], function () {
+        var table = layui.table;
+        $ = layui.jquery;
+        var form = layui.form,
+            layer = layui.layer;
+        //自定义验证规则
+        form.verify({
+            expertname: [/^[\u4e00-\u9fa5]{2,4}$|^[a-zA-Z]{1,30}$/, '姓名只能为2至4个汉字或1至30个英文单词'],
+        });
+
+        //修改监听
+        form.on('submit(update)', function (data) {
+            var id = data.field.id;
+            var title = data.field.title;
+            var rules = data.field.rules;
+            var sstatus = data.field.status;
+            var status = '';
+            if (sstatus == '是') {
+                status = 1;
+            } else {
+                status = 0;
+            }
+            console.log(status)
+
+            editid = id;
+            if (editid == uneditid) {
+                $.ajax({
+                    type: "post",
+                    url: "../Admin/adminroleupdate",
+                    dataType: "json",
+                    data: {
+                        "id": id, "title": title, "rules": rules, "status": status
+                    },
+                    async: false,//必须是同步提交的
+                    success: function (data) {
+                        console.log(data);
+                        layer.alert('修改成功', {icon: 6}, function (index) {
+                            layer.closeAll();
+                            table.reload('searchreload');
+                        });
+                    },
+                });
+            } else {
+                $.ajax({
+                    type: "post",
+                    url: "{:url('Admin/adminroledel')}",
+                    dataType: "json",
+                    data: {"id": uneditid},
+                    async: false,
+                    success: function (data) {
+                        $.ajax({
+                            url: "../Admin/adminroleidcheck",
+                            type: 'POST',
+                            dataType: "json",
+                            data: {"id": editid},
+                            async: false,//必须是同步提交的
+                            success: function (res) {
+                                // console.log(res.data);
+                                if (res.data == 1) {
+                                    layer.msg('ID已存在，请修改ID！', {icon: 5});
+                                } else if (res.data == 0) {
+                                    $.ajax({
+                                        url: "../Admin/adminroleinsert",
+                                        type: "post",
+                                        dataType: "json",
+                                        data: {
+                                            "id": id, "title": title, "rules": rules, "status": status
+                                        },
+                                        async: false,//必须是同步提交的
+                                        success: function (t) {
+                                            console.log(t);
+                                            layer.alert('修改成功', {icon: 6}, function (index) {
+                                                layer.closeAll();
+                                                table.reload('searchreload');
+
+                                            });
+                                        },
+                                    });
+
+                                }
+                            },
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    layui.use('table', function () {
+        var table = layui.table;
+        table.render({
+            even: false //开启隔行背景
+            , size: 'sm' //小尺寸的表格
+            , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+            , minheight: "800px"
+            , elem: '#test'
+            , page: true
+            , id: 'searchreload'
+            , limit: 15
+            , height: 650
+            , url: "{:url('Admin/adminrulesjson')}"
+            , parseData: function (res) { //res 即为原始返回的数据
+                return {
+                    "code": 0, //解析接口状态
+                    "msg": "刷新页面试试", //解析提示文本
+                    "count": res.total, //解析数据长度
+                    "data": res.data//解析数据列表
+                };
+
+            },
+            cols: [[
+                {field: 'id', type: 'checkbox', width: 100, fixed: 'left'}
+                , {field: 'id', title: '权限编号', width: 200, sort: true}
+                , {field: 'title', title: '权限名称', width: 270, sort: true}
+                , {field: 'name', title: '控制器/方法', width: 270}
+                , {field: 'level', title: '级别', width: 270}
+                , {fixed: 'right', title: '操作', toolbar: '#barDemo', width: 220}
+            ]]
+        });
+
+        //查询表格重载  两种的查询方式
+        $('.demoTable .layui-btn').on('click', function () {
+            console.log(document.getElementById("check").value);
+            table.reload('searchreload', {
+                where: { //设定异步数据接口的额外参数，任意设
+                    type: document.getElementById("check").value,
+                    value: $("#inputval").val()
+                },
+                page: {
+                    curr: 1
+                }
+            });
+        });
+
+
+        //监听头部工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                //新增
+                case 'addData':
+                    layer.open({
+                        type: 2,
+                        title: '权限添加',
+                        shadeClose: true,
+                        shade: false,
+                        //btn: ['确定', '取消'],
+                        maxmin: true, //开启最大化最小化按钮
+                        area: ['800px', '350px'],
+                        content: ['adminrulesadd'],
+                        end: function () {
+                            table.reload('searchreload');
+                        }
+                    });
+                    break;
+
+
+                //批量删除
+                case 'dels':
+                    var data = checkStatus.data;
+                    var ids = [];
+                    data.forEach(function (item) {
+                        ids.push(item.id);
+                    });
+                    // console.log(ids);
+                    if (data.length == '') {
+                        layer.msg("未选择数据");
+                    } else {
+                        layer.confirm('真的删除选中数据吗', function (index) {
+                            layer.close(index);
+                            $.ajax({
+                                type: "post",
+                                url: "{:url('Admin/adminroledels')}",
+                                dataType: "json",
+                                data: {"ids": ids},
+                                async: false,
+                                success: function (data) {
+                                    layer.msg("删除成功");
+                                    table.reload('searchreload');
+                                }
+                            });
+                            layer.msg("删除成功");
+                            table.reload('searchreload');
+                        })
+                    }
+                    break;
+                case 'refresh':
+                    location.reload();
+                    //able.reload('searchreload');  正确 搜索存在问题 导致无法刷新
+                    break;
+            }
+            ;
+        });
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('真的删除行么', function (index) {
+                    layer.close(index);
+                    $.ajax({
+                        type: "post",
+                        url: "{:url('Admin/adminroledel')}",
+                        dataType: "json",
+                        data: {"id": data.id},
+                        async: false,
+                        success: function (data) {
+                            layer.msg("删除成功");
+                            table.reload('searchreload');
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                var id = data.id;
+                layui.use('layer', function () {
+                    var layer = layui.layer;
+                    layer.open({
+                        type: 1,
+                        title: "用户组修改",
+                        shade: false,
+                        area: ['800px', '350px'],
+                        content: $('#edit_form').html(),
+                        success: function (layero, index) {
+                            uneditid = id;
+                            $.ajax({
+                                type: "post",
+                                url: "{:url('Admin/geteditroleadmin')}",
+                                dataType: "json",
+                                data: {"id": data.id},
+                                async: false,
+                                success: function (data) {
+
+                                    table.reload('searchreload');
+                                    $(" input[name='id']").val(data.list1.id);
+                                    $(" input[name='title']").val(data.list1.title);
+                                    $(" input[name='rules']").val(data.list1.rules);
+                                    if (data.list1.status) {
+                                        var status = '是';
+                                    } else {
+                                        var status = '否';
+                                    }
+
+                                    var selecctlevelval;
+                                    var selectlevel = document.getElementById("status");
+                                    for (var i = 0; i < selectlevel.options.length; i++) {
+                                        if (selectlevel.options[i].value == status) {
+                                            selecctlevelval = selectlevel.options[i].value;
+                                            selectlevel.options[i].selected = true;
+                                            $("input[name='status']").val(selectlevel.options[i].value);
+                                        }
+                                    }
+                                    //下拉框必须先赋值在 选中 再渲染
+                                    $(layero).find('select[name=status]').val(selecctlevelval);
+                                }
+                            });
+                            layui.form.render('select');
+                        }
+                    });
+                })
+            }
+        })
+    });
+</script>
+</html>
